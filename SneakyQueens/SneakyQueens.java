@@ -1,9 +1,8 @@
-// Ryan Sheffield
+// Ryan Sheffield, ry257606
 // COP 3503, FALL 2019
 
 import java.io.*;
 import java.util.*;
-import java.util.Arrays;
 
 public class SneakyQueens
 {
