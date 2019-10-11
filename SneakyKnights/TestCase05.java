@@ -26,6 +26,6 @@ public class TestCase05
 		while (in.hasNext())
 			list.add(in.next());
 
-		checkTest(SneakyKnights.allTheKnightsAreSafe(list, 10) == false);
+		checkTest(SneakyKnights.allTheKnightsAreSafe(list, 11) == false);
 	}
 }
