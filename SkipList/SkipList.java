@@ -20,7 +20,9 @@ class Node<AnyType extends Comparable<AnyType>>
     Node(int height)
     {
         this.height = height;
-        this.next.add((height - 1), null);
+        this.next = new ArrayList<Node<AnyType>>();
+        for(int i = 0; i < height; i++)
+            this.next.add(i, null);
     }
 
     // Initializes a node with data and height
@@ -28,6 +30,7 @@ class Node<AnyType extends Comparable<AnyType>>
     {
         this.data = data;
         this.height = height;
+        this.next = new ArrayList<Node<AnyType>>();
         for(int i = 0; i < height; i++)
             this.next.add(i, null);
     }
@@ -47,7 +50,7 @@ class Node<AnyType extends Comparable<AnyType>>
     // Returns the reference at a given level, or null if the level can't exist
     public Node<AnyType> next(int level)
     {
-        if((level < 0) || (level > (this.height - 1)))
+        if((level < 0) || (level >= this.height))
             return null;
         return this.next.get(level);
     }
@@ -64,8 +67,8 @@ class Node<AnyType extends Comparable<AnyType>>
     public void grow()
     {
         // Increments height, and adds a null reference at that height
-        this.height++;
-        this.next.add(this.height, null);
+        this.height = height() + 1;
+        this.next.add(this.height() - 1, null);
     }
 
     // Has a 50% chance to grow a node who was at it's max height by 1 when the
@@ -95,7 +98,6 @@ public class SkipList<AnyType extends Comparable<AnyType>>
     // Initializes a SkipList with a height of 1
     SkipList()
     {
-        SkipList<AnyType> skipList = new SkipList<>();
         this.size = 0;
         Node<AnyType> head = new Node<>(1);
         this.head = head;
@@ -104,7 +106,6 @@ public class SkipList<AnyType extends Comparable<AnyType>>
     // Initializes a SkipList with a given height
     SkipList(int height)
     {
-        SkipList<AnyType> skipList = new SkipList<>();
         this.size = 0;
         Node<AnyType> head = new Node<>(height);
         this.head = head;
@@ -116,6 +117,11 @@ public class SkipList<AnyType extends Comparable<AnyType>>
         return this.size;
     }
 
+    public int height()
+    {
+        return head().height;
+    }
+
     // Returns the head of the SkipList
     public Node<AnyType> head()
     {
@@ -125,90 +131,91 @@ public class SkipList<AnyType extends Comparable<AnyType>>
     // Inserts some data into the SkipList and randomizes the height of the node
     public void insert(AnyType data)
     {
-        // Start insertion by checking if the new node will affect the max height
-        // Compare the ceiling of log base 2 of n + 1 and n
-        double max = getMaxHeight(this.size + 1);
-        double prevMax = getMaxHeight(this.size);
+        // Increments size
+        this.size = size() + 1;
 
-        // Use a temp node to navigate the highest level of references
-        Node<AnyType> temp = this.head;
-
-        // Set an integer to the previous highest level
-        int tempH = temp.height - 1;
+        // If the newNode is the first to be inserted, add it directly
         // If the new max is larger than the previous, growth must occur
-        if(max > prevMax)
+        if(head().next(0) == null)
         {
-            this.head.grow();
-            // Travel along the previous highest level and maybe grow each node
-            while(temp.next.get(tempH) != null)
-            {
-                temp.next.get(tempH).maybeGrow();
-                temp = temp.next.get(tempH);
-            }
+            Node<AnyType> newNode = new Node<>(data, 1);
+            head().setNext(0, newNode);
         }
-
-        // Generate the height of the new node, so while the SkipList is traversed,
-        // the appropriate references can be set to the new node
-        int h = this.generateRandomHeight(this.head.height);
-
-        // Initialize the new node with the data and height
-        Node<AnyType> newNode = new Node<>(data, h);
-
-        // Re-Use temp node set initially as the head in order to traverse the SkipList
-        temp = this.head;
-        int i = 1;
-
-        // Important note for continuing
-        The last thing I was working on was how to traverse the SkipList and
-        edit the nodes I was visiting. I'm using a temp node for traversal, but
-        I can't change the references through the temp node. Find a way to edit
-        the references without the convoluded cases I'm using, because it runs the
-        risk of going out of bounds in the arrayList of references.
-
-        // Traverse the list until the bottom level of the SkipList is checked
-        while(i <= head.height)
+        else
         {
-            // Create a base case where temp is equal to the head, and the first
-            // movement down a level still has temp = head
-            if(i == 1)
+            // Start insertion by checking if the new node will affect the max height
+            // Compare the ceiling of log base 2 of n + 1 and n
+            double max = getMaxHeight(size());
+            double prevMax = getMaxHeight(size() - 1);
+            // Generate the height of the new node, so while the SkipList is traversed,
+            // the appropriate references can be set to the new node
+            int h = generateRandomHeight(height());
+
+            // Initialize the new node with the data and height
+            Node<AnyType> newNode = new Node<>(data, h);
+
+            // Use the temp to navigate the highest level of references
+            Node<AnyType> temp = head();
+
+            if(max > prevMax)
             {
-                if(head.next.get(head.height - i).data.compareTo(data) < 0)
+                head().grow();
+                boolean truther = true;
+
+                // Travel along the previous highest level and maybe grow each node
+                while(truther == true)
                 {
-                    // If the height of the new node is equal to the head, set heads
-                    // highest reference to newNode
-                    if(newNode.height == head.height)
-                        head.setNext(head.height - i, newNode);
+                    if(height() == 2)
+                        break;
+                    if(temp.next(height() - 2) != null)
+                    {
+                        temp.next(height() - 2).maybeGrow();
+                        if((temp.height()) == (temp.next(height() - 2).height()))
+                            temp.setNext(height() - 1, temp.next(height() - 2));
+                        temp = temp.next(temp.height() - 2);
+                    }
+                    else
+                    {
+                        truther = false;
+                    }
                 }
-                i++;
             }
-            // From here, we look at the next next reference
-            else if(i != head.height)
+
+            // Use temp set initially as the head in order to traverse the SkipList
+            temp = head();
+            int i = height() - 1;
+
+            // Traverse the list until the bottom level of the SkipList is checked
+            while(i >= 0)
             {
+
+                if(temp.next(i) == null)
+                {
+                    if(newNode.height() >= (i + 1))
+                    {
+                        newNode.setNext(i, temp.next(i));
+                        temp.setNext(i, newNode);
+                    }
+                    i--;
+                }
                 // If the old data is less than the new data, set temp equal to the
                 // node being referenced, go forward
-                if(temp.next.get(head.height - i).next.get(head.height - (i + 1)).data.compareTo(data) < 0)
+                else if(temp.next(i).value().compareTo(data) < 0)
                 {
-                    // If the height of the new node is greater than or equal to the
-                    // previous temp node, set the temps highest reference to the new node
-                    if(newNode.height >= temp.next.get(head.height - i).height)
-                        temp.next.get(head.height - i).setNext(head.height - i, newNode);
-
-                    temp = temp.next.get(head.height - i);
+                    temp = temp.next(i);
                 }
                 // If the old data is greater than or equal to the new data, check
                 // the next level of references, go down
                 else
                 {
-                    i++;
-                }
-            }
-            // This is meant to ensure that we don't go out of bounds with our references
-            else if(i == head.height)
-            {
-                if(temp.next.get(head.height - i).data.compareTo(data) < 0)
-                {
-                    if(newNode.height >= temp.next.get(head.height - i).height)
-                        temp.next.get(head.height - i).setNext(head.height - i, newNode);
+                    // If the height of the new node is greater than or equal to the
+                    // previous temp node, set the temps highest reference to the new node
+                    if(newNode.height() >= (i + 1))
+                    {
+                        newNode.setNext(i, temp.next(i));
+                        temp.setNext(i, newNode);
+                    }
+                    i--;
                 }
             }
         }
@@ -217,32 +224,205 @@ public class SkipList<AnyType extends Comparable<AnyType>>
     // Inserts using the same code as above, but without making the height random
     public void insert(AnyType data, int height)
     {
+        // Increments size
+        this.size = size() + 1;
+        int h = height;
 
+        // If the newNode is the first to be inserted, add it directly
+        // If the new max is larger than the previous, growth must occur
+        if(head().next(0) == null)
+        {
+            Node<AnyType> newNode = new Node<>(data, h);
+            for(int i = 0; i < h; i++)
+            {
+                head().setNext(i, newNode);
+            }
+        }
+        else
+        {
+            // Start insertion by checking if the new node will affect the max height
+            // Compare the ceiling of log base 2 of n + 1 and n
+            double max = getMaxHeight(size());
+            double prevMax = getMaxHeight(size() - 1);
+
+            // Initialize the new node with the data and height
+            Node<AnyType> newNode = new Node<>(data, h);
+
+            // Use the temp to navigate the highest level of references
+            Node<AnyType> temp = head();
+
+            if(max > prevMax)
+            {
+                head().grow();
+                boolean truther = true;
+
+                // Travel along the previous highest level and maybe grow each node
+                while(truther == true)
+                {
+                    if(height() == 2)
+                        break;
+                    if(temp.next(height() - 2) != null)
+                    {
+                        temp.next(height() - 2).maybeGrow();
+                        if((temp.height()) == (temp.next(height() - 2).height()))
+                            temp.setNext(height() - 1, temp.next(height() - 2));
+                        temp = temp.next(temp.height() - 2);
+                    }
+                    else
+                    {
+                        truther = false;
+                    }
+                }
+            }
+
+            // Use temp set initially as the head in order to traverse the SkipList
+            temp = head();
+            int i = height() - 1;
+
+            // Traverse the list until the bottom level of the SkipList is checked
+            while(i >= 0)
+            {
+
+                if(temp.next(i) == null)
+                {
+                    if(newNode.height() >= (i + 1))
+                    {
+                        newNode.setNext(i, temp.next(i));
+                        temp.setNext(i, newNode);
+                    }
+                    i--;
+                }
+                // If the old data is less than the new data, set temp equal to the
+                // node being referenced, go forward
+                else if(temp.next(i).value().compareTo(data) < 0)
+                {
+                    temp = temp.next(i);
+                }
+                // If the old data is greater than or equal to the new data, check
+                // the next level of references, go down
+                else
+                {
+                    // If the height of the new node is greater than or equal to the
+                    // previous temp node, set the temps highest reference to the new node
+                    if(newNode.height() >= (i + 1))
+                    {
+                        newNode.setNext(i, temp.next(i));
+                        temp.setNext(i, newNode);
+                    }
+                    i--;
+                }
+            }
+        }
     }
 
+    // Function for deletion of nodes while moving references to the next
+    // appropriate place
     public void delete(AnyType data)
     {
+        // If the SkipList only has 1 other node, just set all of heads references to null
+        if(size() == 1)
+        {
+            for(int j = 0; j < height(); j++)
+                head().setNext(j, null);
+        }
+        else
+        {
+            Node<AnyType> temp = head();
+            // Use target node to replace references
+            Node<AnyType> target = get(data);
+            int i = height() - 1;
 
+            // Traverse the list until the bottom level of the SkipList is checked
+            while(i >= 0)
+            {
+                if(temp.next(i) == null)
+                    i--;
+                // If the old data is less than the target set temp equal to the
+                // node being referenced, go forward
+                else if(temp.next(i).value().compareTo(data) < 0)
+                {
+                    temp = temp.next(i);
+                }
+                // If the old data is greater than or equal to the target, check
+                // the next level of references, go down
+                else
+                {
+                    // If the next node is equal to the target, set the temp
+                    // nodes references to the target
+                    if(temp.next(i).value() == target.value())
+                        temp.setNext(i, target.next(i));
+                    i--;
+                }
+            }
+        }
     }
 
+    // Function for checking if a value is contained in the SkipList
     public boolean contains(AnyType data)
     {
+        Node<AnyType> temp = head();
+        int i = height() - 1;
+
+        // Traverse the list until the bottom level of the SkipList is checked
+        while(i >= 0)
+        {
+            if(temp.next(i) == null)
+                i--;
+            // If the old data is less than the new data, set temp equal to the
+            // node being referenced, go forward
+            else if(temp.next(i).value().compareTo(data) < 0)
+            {
+                temp = temp.next(i);
+            }
+            // If the old data is greater than or equal to the new data, check
+            // the next level of references, go down
+            else
+            {
+                if(temp.next(i).value().compareTo(data) == 0)
+                    return true;
+                i--;
+            }
+        }
         return false;
     }
 
     public Node<AnyType> get(AnyType data)
     {
-        return this.head;
+        Node<AnyType> temp = head();
+        Node<AnyType> target = null;
+        int i = height() - 1;
+
+        // Traverse the list until the bottom level of the SkipList is checked
+        while(i >= 0)
+        {
+            if(temp.next(i) == null)
+                i--;
+            // If the old data is less than the new data, set temp equal to the
+            // node being referenced, go forward
+            else if(temp.next(i).value().compareTo(data) < 0)
+            {
+                temp = temp.next(i);
+            }
+            // If the old data is greater than or equal to the new data, check
+            // the next level of references, go down
+            else
+            {
+                if(temp.next(i).value().compareTo(data) == 0)
+                    target = temp.next(i);
+                i--;
+            }
+        }
+        return target;
     }
 
     public static double difficultyRating()
     {
-        return 3;
+        return 4;
     }
 
     public static double hoursSpent()
     {
-        return 4.5;
+        return 8;
     }
 
     // Past here are the methods suggested by Dr. Szumlanski
@@ -251,6 +431,8 @@ public class SkipList<AnyType extends Comparable<AnyType>>
     {
         double max = Math.ceil(Math.log(n)/Math.log(2));
         int intMax = (int) max;
+        if(max == 0)
+            return 1;
         return intMax;
     }
 
@@ -262,7 +444,7 @@ public class SkipList<AnyType extends Comparable<AnyType>>
         while(rand.nextBoolean() == true)
         {
             if(h == maxHeight)
-                break;
+                return h;
             else
                 h++;
         }
@@ -273,4 +455,16 @@ public class SkipList<AnyType extends Comparable<AnyType>>
     {
 
     }
+
+    /*public static void main(String [] args)
+    {
+        SkipList<Integer> s = new SkipList<Integer>();
+        Node<Integer> nod = s.head();
+		s.insert(10);
+		s.insert(20);
+		s.insert(3);
+		s.insert(15);
+		s.insert(5);
+
+    }*/
 }
