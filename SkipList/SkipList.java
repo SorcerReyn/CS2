@@ -422,7 +422,7 @@ public class SkipList<AnyType extends Comparable<AnyType>>
 
     public static double hoursSpent()
     {
-        return 8;
+        return 13;
     }
 
     // Past here are the methods suggested by Dr. Szumlanski
