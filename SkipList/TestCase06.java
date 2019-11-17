@@ -44,6 +44,6 @@ public class TestCase06
 		// Check that the total search time was reasonably fast (not linear search).
 		// This time limit will be unreasonable on Eustis, but will probably be
 		// reasonable on your own system.
-		System.out.println((success && totalTime < 500000) ? "Hooray!" : "fail whale :(");
+		System.out.println((success && totalTime < 5000000) ? "Hooray!" : "fail whale :(");
 	}
 }

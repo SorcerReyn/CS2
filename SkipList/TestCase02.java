@@ -40,7 +40,7 @@ public class TestCase02
 	public static void main(String [] args)
 	{
 		SkipList<Integer> s = new SkipList<Integer>();
-
+		Node<Integer> temp = s.head();
 		s.insert(10);
 		s.insert(20);
 		s.insert(3);

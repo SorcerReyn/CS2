@@ -46,7 +46,7 @@ public class TestCase03
 		// ... and so on.
 
 		int [] powers = new int[] {0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
-
+		Node<Integer> temp = skiplist.head();
 		for (int i = 0; i < powers.length - 1; i++)
 		{
 			for (size = powers[i] + 1; size <= powers[i+1]; size++)
