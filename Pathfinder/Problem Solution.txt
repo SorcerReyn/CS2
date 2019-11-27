@@ -1,0 +1,11 @@
+Problem Solution:
+
+Using the already existing backtracking program, go through the maze every
+possible run, and record all of the successful solutions in a stack, and when a
+successful total path is found, convert the row into a string and place it in
+the HashSet
+
+Now I need to be able to go through all of the possible paths; including open
+ones. I think it should be possible if I just utilize the for loop I already have
+with all of the possible moves. I just need to tell my program to backtrack to
+the next iteration and try again.
