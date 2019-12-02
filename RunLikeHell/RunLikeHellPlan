@@ -1,0 +1,9 @@
+Stuff for Recursive solution (Top down):
+
+
+Stuff for DP solution (Bottom up):
+At any given point, you can either take the block behind the next block, or not, so you will always take either the block 2 spaces away in your array, or 3 spaces away.
+
+As a base, take either the first or second block.
+
+From there, ________
